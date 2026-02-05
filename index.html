@@ -39,6 +39,8 @@
 </head>
 <body class="p-4 md:p-6">
 
+    <audio id="telegraph-sound" src="https://www.soundjay.com/communication/telegraph-key-1.mp3" loop></audio>
+
     <header class="max-w-6xl mx-auto text-center mb-8">
         <div class="flex justify-between items-end mb-2 text-[10px] font-bold uppercase tracking-widest px-1">
             <div id="weather-text">⚓ Amsterdam Climate...</div>
@@ -76,11 +78,30 @@
     </main>
 
     <script>
+        // --- HELPER: TRANSLATION ---
+        async function translateText(text) {
+            if (!text) return "";
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=nl&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                return data[0][0][0]; 
+            } catch (e) {
+                return text; 
+            }
+        }
+
+        // --- MAIN: FETCH NEWS ---
         async function fetchNews() {
             const btn = document.getElementById('btn');
+            const sound = document.getElementById('telegraph-sound');
             const originalText = "Reprint Edition";
+            
             btn.textContent = "PRINTING...";
             btn.disabled = true;
+            
+            // Start telegraph sound
+            try { sound.play(); } catch(e) { console.log("Sound blocked by browser"); }
 
             // 1. Weather Fetch
             try {
@@ -110,74 +131,4 @@
                 'netherlands-box': [
                     'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.nos.nl/nosnieuwsbinnenland',
                     'https://api.rss2json.com/v1/api.json?rss_url=https://www.volkskrant.nl/voorpagina/rss.xml',
-                    'https://api.rss2json.com/v1/api.json?rss_url=https://www.parool.nl/amsterdam/rss.xml'
-                ],
-                'international-box': [
-                    'https://api.rss2json.com/v1/api.json?rss_url=http://feeds.bbci.co.uk/news/world/rss.xml',
-                    'https://api.rss2json.com/v1/api.json?rss_url=https://www.theguardian.com/world/rss',
-                    'https://api.rss2json.com/v1/api.json?rss_url=http://rss.cnn.com/rss/edition_world.rss'
-                ]
-            };
-
-            for (const [boxId, urls] of Object.entries(categories)) {
-    try {
-        let combinedItems = [];
-        for (const url of urls) {
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.items) combinedItems = combinedItems.concat(data.items);
-        }
-        combinedItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-
-        const container = document.getElementById(boxId);
-        let itemsHtml = "";
-
-        // Process top 7 items
-        for (const item of combinedItems.slice(0, 7)) {
-            const isDutch = urls.some(u => u.includes('.nl'));
-            
-            // Translate if it's a Dutch source
-            const cleanDesc = item.description.replace(/<[^>]*>/g, '').substring(0, 100);
-            const displayTitle = isDutch ? await translateText(item.title) : item.title;
-            const displayDesc = isDutch ? await translateText(cleanDesc) : cleanDesc;
-
-            itemsHtml += `
-                <div class="news-card">
-                    <h3 class="font-black text-lg leading-tight mb-2">
-                        <a href="${item.link}" target="_blank" class="hover:underline">${displayTitle}</a>
-                    </h3>
-                    <p class="text-xs leading-relaxed text-gray-800">${displayDesc}...</p>
-                </div>`;
-        }
-        container.innerHTML = itemsHtml;
-    } catch (e) {
-        document.getElementById(boxId).innerHTML = "<p class='text-xs italic'>Cables cut. News delayed.</p>";
-    }
-}
-
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }
-
-        // Initialize Date
-        document.getElementById('displayDate').textContent = new Date().toLocaleDateString('en-GB', { 
-            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
-        }).toUpperCase();
-
-        // Run on load
-        window.onload = fetchNews;
-    </script>
-    async function translateText(text) {
-    if (!text) return "";
-    try {
-        // This is a free, public endpoint used by browser extensions
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=nl&tl=en&dt=t&q=${encodeURIComponent(text)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        return data[0][0][0]; 
-    } catch (e) {
-        return text; // Fallback to Dutch if service is busy
-    }
-}
-</body>
-</html>
+                    'https://api.rss2json.com/v1/api.json?rss_url=https://www.parool.nl/amsterdam/rss.
