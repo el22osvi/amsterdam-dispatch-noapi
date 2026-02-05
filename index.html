@@ -13,6 +13,28 @@
         .section-title { border-bottom: 2px solid black; font-weight: 900; text-transform: uppercase; margin-bottom: 1rem; }
         .news-card { border-bottom: 1px solid #ccc; padding-bottom: 1rem; margin-bottom: 1rem; }
         
+        /* THE VINTAGE BUTTON STYLE */
+        .reprint-btn {
+            border: 2px solid black;
+            padding: 4px 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 2px 2px 0px black;
+            background-color: transparent;
+        }
+        .reprint-btn:hover {
+            background-color: black;
+            color: #f0ede5;
+            box-shadow: 0px 0px 0px black;
+            transform: translate(1px, 1px);
+        }
+        .reprint-btn:active {
+            transform: scale(0.95);
+        }
+
         /* Vintage Paper Texture */
         body::before {
             content: "";
@@ -43,10 +65,12 @@
             </div>
         </div>
         
-        <div class="flex justify-between items-center mt-2 px-1 italic text-[10px] text-gray-600">
+        <div class="flex justify-between items-center mt-3 px-1 italic text-[10px] text-gray-600">
             <span>Price: One Penny</span>
+            <button onclick="fetchNews()" id="btn" class="reprint-btn italic-none not-italic">
+                Reprint Edition
+            </button>
             <span>Est. 2026</span>
-            <button onclick="fetchNews()" id="btn" class="hover:underline cursor-pointer uppercase font-bold tracking-widest not-italic">Reprint Edition</button>
         </div>
     </header>
 
@@ -70,7 +94,9 @@
     <script>
         async function fetchNews() {
             const btn = document.getElementById('btn');
+            const originalText = "Reprint Edition";
             btn.textContent = "PRINTING...";
+            btn.disabled = true;
 
             const categories = {
                 'at5-box': ['https://api.rss2json.com/v1/api.json?rss_url=https://at5.api.abc.nh-at5.nl/rss/at5'],
@@ -98,11 +124,11 @@
                 const desc = wItem.description.split('<br/>')[0]?.trim() || "Cloudy";
                 document.getElementById('weather-text').innerHTML = `⚓ Amsterdam: ${temp} — ${desc}`;
 
-                // 2. Rail Dispatch (NS) - Filtered for Amsterdam
+                // 2. Rail Dispatch (NS)
                 const nsRes = await fetch(nsUrl);
                 const nsData = await nsRes.json();
                 const amsterdamAlert = nsData.items.find(i => i.title.toLowerCase().includes('amsterdam')) 
-                                       || nsData.items[0]; // Fallback to latest national if no local
+                                       || nsData.items[0];
                 
                 document.getElementById('ns-text').innerHTML = amsterdamAlert 
                     ? `RAIL NOTICE: ${amsterdamAlert.title} — DISPATCHED AT ${new Date(amsterdamAlert.pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` 
@@ -135,7 +161,8 @@
             } catch (e) {
                 console.error("Sync failed");
             } finally {
-                btn.textContent = "REPRINT EDITION";
+                btn.textContent = originalText;
+                btn.disabled = false;
             }
         }
 
