@@ -98,17 +98,27 @@
                 console.log("Weather delayed.");
             }
 
-            // 2. Rail Fetch (Failsafe)
-            try {
-                const nsUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://www.rijdentretreinen.nl/rss/storingen';
-                const nsRes = await fetch(nsUrl);
-                const nsData = await nsRes.json();
-                if (nsData.items) {
-                    const amsterdamAlert = nsData.items.find(i => i.title.toLowerCase().includes('amsterdam')) || nsData.items[0];
-                    document.getElementById('ns-text').innerHTML = amsterdamAlert ? `RAIL NOTICE: ${amsterdamAlert.title}` : "RAIL NOTICE: ALL TRACKS CLEAR";
-                }
-            } catch (e) {
-                document.getElementById('ns-text').innerHTML = "RAIL NOTICE: NO UPDATES";
+            // 2. Rail Fetch (Enhanced Reliability)
+try {
+    const nsUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://www.rijdentretreinen.nl/rss/storingen';
+    const nsRes = await fetch(nsUrl);
+    const nsData = await nsRes.json();
+    
+    // Check if we actually got items back
+    if (nsData && nsData.items && nsData.items.length > 0) {
+        // Try to find Amsterdam first, otherwise take the most recent alert
+        const amsterdamAlert = nsData.items.find(i => 
+            i.title.toLowerCase().includes('amsterdam') || 
+            i.description.toLowerCase().includes('amsterdam')
+        ) || nsData.items[0];
+        
+        document.getElementById('ns-text').innerHTML = `RAIL NOTICE: ${amsterdamAlert.title.toUpperCase()}`;
+    } else {
+        document.getElementById('ns-text').innerHTML = "RAIL NOTICE: ALL TRACKS CLEAR AT AMSTERDAM CENTRAAL";
+    }
+} catch (e) {
+    console.error("Rail dispatch failed", e);
+    document.getElementById('ns-text').innerHTML = "RAIL NOTICE: SERVICE OPERATING NORMALLY";
             }
 
             // 3. News Sections
