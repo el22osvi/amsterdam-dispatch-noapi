@@ -3,58 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amsterdam Dispatch | No-API Edition</title>
+    <title>Amsterdam Dispatch | Vintage Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Libre+Baskerville&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Libre Baskerville', serif; background-color: #f4f1ea; color: #1a1a1a; }
-        .headline { font-family: 'Playfair Display', serif; }
-        .newspaper-border { border-top: 4px solid black; border-bottom: 1px solid black; }
-        .section-title { border-bottom: 2px solid black; display: inline-block; margin-bottom: 1.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; }
-        .news-card { margin-bottom: 1.5rem; border-bottom: 1px solid #ddd; padding-bottom: 1rem; transition: all 0.3s; }
-        .news-card:hover { background-color: #fff; transform: translateY(-2px); }
+        body { font-family: 'Libre Baskerville', serif; background-color: #f0ede5; color: #1a1a1a; }
+        .headline { font-family: 'Playfair Display', serif; letter-spacing: -1px; }
+        .double-border { border-top: 3px solid black; border-bottom: 1px solid black; }
+        .section-title { border-bottom: 2px solid black; font-weight: 900; text-transform: uppercase; margin-bottom: 1rem; }
+        .news-card { border-bottom: 1px solid #ccc; padding-bottom: 1rem; margin-bottom: 1rem; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-6">
 
-    <header class="max-w-6xl mx-auto text-center mb-12">
-        <div class="newspaper-border py-8">
-            <h1 class="text-5xl md:text-7xl headline font-black uppercase text-black">Amsterdam Dispatch</h1>
-            <p class="uppercase text-xs font-bold mt-2 tracking-widest text-black">Live Intelligence • puto el que lee • <span id="displayDate"></span></p>
+    <header class="max-w-6xl mx-auto text-center mb-8">
+        <div class="flex justify-between items-end mb-2 text-[10px] font-bold uppercase tracking-widest px-1">
+            <div id="weather-text">Syncing Climate...</div>
+            <div id="displayDate"></div>
         </div>
-        <div class="max-w-6xl mx-auto px-4 mb-8">
-    <div id="weather-box" class="bg-white border-4 border-black p-4 inline-block shadow-[4px_4px_0_#000]">
-        <h3 class="text-[10px] font-bold uppercase border-b border-black mb-2">Amsterdam Climate</h3>
-        <div id="weather-content" class="flex items-center space-x-4">
-            <span class="text-xs italic text-gray-400">Syncing with Buienradar...</span>
+        
+        <div class="double-border py-4">
+            <h1 class="text-6xl md:text-8xl headline font-black uppercase">Amsterdam Dispatch</h1>
         </div>
-    </div>
-</div>
-        <button onclick="fetchNews()" id="btn" class="mt-6 border-2 border-black px-10 py-2 font-bold hover:bg-black hover:text-white transition-all text-xs tracking-widest uppercase">
-            Update Dispatch
-        </button>
+        
+        <div class="flex justify-between items-center mt-2 px-1 italic text-[10px] text-gray-600">
+            <span>Price: One Penny</span>
+            <span>Est. 2026</span>
+            <button onclick="fetchNews()" id="btn" class="hover:underline cursor-pointer">REPRINT EDITION</button>
+        </div>
     </header>
 
     <main class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
         <section>
-            <h2 class="section-title text-xl text-black">Amsterdam </h2>
-            <div id="at5-box" class="space-y-4">
-                <p class="text-xs italic text-gray-400">Loading local dispatches...</p>
-            </div>
+            <h2 class="section-title text-sm">Amsterdam Local</h2>
+            <div id="at5-box"></div>
         </section>
-
         <section>
-            <h2 class="section-title text-xl text-black">Netherlands </h2>
-            <div id="nos-box" class="space-y-4">
-                <p class="text-xs italic text-gray-400">Loading national reports...</p>
-            </div>
+            <h2 class="section-title text-sm">The Netherlands</h2>
+            <div id="nos-box"></div>
         </section>
-
         <section>
-            <h2 class="section-title text-xl text-red-800">International </h2>
-            <div id="bbc-box" class="space-y-4">
-                <p class="text-xs italic text-gray-400">Loading global cables...</p>
-            </div>
+            <h2 class="section-title text-sm text-red-900">World Telegram</h2>
+            <div id="bbc-box"></div>
         </section>
     </main>
 
@@ -62,52 +52,52 @@
         async function fetchNews() {
             const btn = document.getElementById('btn');
             btn.textContent = "PRINTING...";
-            btn.disabled = true;
 
-            // Public RSS-to-JSON URLs (Zero API Keys needed)
             const feeds = {
-                'at5-box': 'https://api.rss2json.com/v1/api.json?rss_url=https://rss.at5.nl/rss',
+                'at5-box': 'https://api.rss2json.com/v1/api.json?rss_url=https://at5.api.abc.nh-at5.nl/rss/at5',
                 'nos-box': 'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.nos.nl/nosnieuwsbinnenland',
                 'bbc-box': 'https://api.rss2json.com/v1/api.json?rss_url=http://feeds.bbci.co.uk/news/world/rss.xml'
             };
 
+            const weatherUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://data.buienradar.nl/1.0/feed/xml/rss/station/6240';
+
             try {
+                // Fetch Weather as simple text
+                const wRes = await fetch(weatherUrl);
+                const wData = await wRes.json();
+                const wItem = wData.items[0];
+                const temp = wItem.title.split(':')[1]?.trim() || "3°C";
+                const desc = wItem.description.split('<br/>')[0]?.trim() || "Cloudy";
+                document.getElementById('weather-text').innerHTML = `Amsterdam: ${temp} — ${desc}`;
+
+                // Fetch News
                 for (const [boxId, url] of Object.entries(feeds)) {
                     const res = await fetch(url);
                     const data = await res.json();
-                    
                     const container = document.getElementById(boxId);
-                    if (data.items) {
-                        container.innerHTML = data.items.slice(0, 5).map(item => `
-                            <div class="news-card">
-                                <h3 class="font-bold text-lg leading-tight mb-2">
-                                    <a href="${item.link}" target="_blank" class="hover:underline text-black">${item.title}</a>
-                                </h3>
-                                <p class="text-[11px] text-gray-600 leading-relaxed mb-2">
-                                    ${item.description.replace(/<[^>]*>/g, '').substring(0, 120)}...
-                                </p>
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Verified Link</span>
-                            </div>
-                        `).join('');
-                    } else {
-                        container.innerHTML = `<p class="text-xs italic text-red-500">Feed unavailable.</p>`;
-                    }
+                    
+                    container.innerHTML = data.items.slice(0, 5).map(item => `
+                        <div class="news-card">
+                            <h3 class="font-black text-lg leading-tight mb-2">
+                                <a href="${item.link}" target="_blank" class="hover:underline">${item.title}</a>
+                            </h3>
+                            <p class="text-xs leading-relaxed text-gray-800">
+                                ${item.description.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                            </p>
+                        </div>
+                    `).join('');
                 }
             } catch (e) {
-                console.error("News sync failed:", e);
-                alert("The News Desk is temporarily offline. Please try again.");
+                console.error("Sync failed");
             } finally {
-                btn.textContent = "UPDATE DISPATCH";
-                btn.disabled = false;
+                btn.textContent = "REPRINT EDITION";
             }
         }
 
-        // Initialize display
         document.getElementById('displayDate').textContent = new Date().toLocaleDateString('en-GB', { 
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
         }).toUpperCase();
 
-        // Run immediately on load
         window.onload = fetchNews;
     </script>
 </body>
