@@ -7,11 +7,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Libre+Baskerville&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Libre Baskerville', serif; background-color: #f0ede5; color: #1a1a1a; }
+        body { font-family: 'Libre Baskerville', serif; background-color: #f0ede5; color: #1a1a1a; position: relative; }
         .headline { font-family: 'Playfair Display', serif; letter-spacing: -1px; }
         .double-border { border-top: 3px solid black; border-bottom: 1px solid black; }
         .section-title { border-bottom: 2px solid black; font-weight: 900; text-transform: uppercase; margin-bottom: 1rem; }
         .news-card { border-bottom: 1px solid #ccc; padding-bottom: 1rem; margin-bottom: 1rem; }
+        
+        /* Vintage Paper Texture */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.04;
+            pointer-events: none;
+            background: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            z-index: 9999;
+        }
     </style>
 </head>
 <body class="p-4 md:p-6">
@@ -25,11 +36,17 @@
         <div class="double-border py-4">
             <h1 class="text-6xl md:text-8xl headline font-black uppercase">Amsterdam Dispatch</h1>
         </div>
+
+        <div class="border-b border-black py-1 px-1 flex justify-center bg-white/30">
+            <div id="ns-text" class="text-[9px] uppercase font-bold tracking-tighter">
+                Checking Rail Intelligence...
+            </div>
+        </div>
         
         <div class="flex justify-between items-center mt-2 px-1 italic text-[10px] text-gray-600">
             <span>Price: One Penny</span>
             <span>Est. 2026</span>
-            <button onclick="fetchNews()" id="btn" class="hover:underline cursor-pointer">REPRINT EDITION</button>
+            <button onclick="fetchNews()" id="btn" class="hover:underline cursor-pointer uppercase font-bold tracking-widest not-italic">Reprint Edition</button>
         </div>
     </header>
 
@@ -38,13 +55,15 @@
             <h2 class="section-title text-sm">Amsterdam Local</h2>
             <div id="at5-box"></div>
         </section>
+
         <section>
             <h2 class="section-title text-sm">The Netherlands</h2>
-            <div id="nos-box"></div>
+            <div id="netherlands-box"></div>
         </section>
+
         <section>
             <h2 class="section-title text-sm text-red-900">World Telegram</h2>
-            <div id="bbc-box"></div>
+            <div id="international-box"></div>
         </section>
     </main>
 
@@ -53,30 +72,56 @@
             const btn = document.getElementById('btn');
             btn.textContent = "PRINTING...";
 
-            const feeds = {
-                'at5-box': 'https://api.rss2json.com/v1/api.json?rss_url=https://at5.api.abc.nh-at5.nl/rss/at5',
-                'nos-box': 'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.nos.nl/nosnieuwsbinnenland',
-                'bbc-box': 'https://api.rss2json.com/v1/api.json?rss_url=http://feeds.bbci.co.uk/news/world/rss.xml'
+            const categories = {
+                'at5-box': ['https://api.rss2json.com/v1/api.json?rss_url=https://at5.api.abc.nh-at5.nl/rss/at5'],
+                'netherlands-box': [
+                    'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.nos.nl/nosnieuwsbinnenland',
+                    'https://api.rss2json.com/v1/api.json?rss_url=https://www.volkskrant.nl/voorpagina/rss.xml',
+                    'https://api.rss2json.com/v1/api.json?rss_url=https://www.parool.nl/amsterdam/rss.xml'
+                ],
+                'international-box': [
+                    'https://api.rss2json.com/v1/api.json?rss_url=http://feeds.bbci.co.uk/news/world/rss.xml',
+                    'https://api.rss2json.com/v1/api.json?rss_url=https://www.theguardian.com/world/rss',
+                    'https://api.rss2json.com/v1/api.json?rss_url=http://rss.cnn.com/rss/edition_world.rss'
+                ]
             };
 
             const weatherUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://data.buienradar.nl/1.0/feed/xml/rss/station/6240';
+            const nsUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://www.rijdentretreinen.nl/rss/storingen';
 
             try {
-                // Fetch Weather as simple text
+                // 1. Weather
                 const wRes = await fetch(weatherUrl);
                 const wData = await wRes.json();
                 const wItem = wData.items[0];
                 const temp = wItem.title.split(':')[1]?.trim() || "3°C";
                 const desc = wItem.description.split('<br/>')[0]?.trim() || "Cloudy";
-                document.getElementById('weather-text').innerHTML = `Amsterdam: ${temp} — ${desc}`;
+                document.getElementById('weather-text').innerHTML = `⚓ Amsterdam: ${temp} — ${desc}`;
 
-                // Fetch News
-                for (const [boxId, url] of Object.entries(feeds)) {
-                    const res = await fetch(url);
-                    const data = await res.json();
+                // 2. Rail Dispatch (NS) - Filtered for Amsterdam
+                const nsRes = await fetch(nsUrl);
+                const nsData = await nsRes.json();
+                const amsterdamAlert = nsData.items.find(i => i.title.toLowerCase().includes('amsterdam')) 
+                                       || nsData.items[0]; // Fallback to latest national if no local
+                
+                document.getElementById('ns-text').innerHTML = amsterdamAlert 
+                    ? `RAIL NOTICE: ${amsterdamAlert.title} — DISPATCHED AT ${new Date(amsterdamAlert.pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` 
+                    : "RAIL NOTICE: ALL TRACKS CLEAR AT AMSTERDAM CENTRAAL";
+
+                // 3. News Sections
+                for (const [boxId, urls] of Object.entries(categories)) {
+                    let combinedItems = [];
+                    for (const url of urls) {
+                        try {
+                            const res = await fetch(url);
+                            const data = await res.json();
+                            if (data.items) combinedItems = combinedItems.concat(data.items);
+                        } catch (e) {}
+                    }
+                    combinedItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
                     const container = document.getElementById(boxId);
-                    
-                    container.innerHTML = data.items.slice(0, 5).map(item => `
+                    container.innerHTML = combinedItems.slice(0, 7).map(item => `
                         <div class="news-card">
                             <h3 class="font-black text-lg leading-tight mb-2">
                                 <a href="${item.link}" target="_blank" class="hover:underline">${item.title}</a>
