@@ -120,30 +120,40 @@
             };
 
             for (const [boxId, urls] of Object.entries(categories)) {
-                try {
-                    let combinedItems = [];
-                    for (const url of urls) {
-                        const res = await fetch(url);
-                        const data = await res.json();
-                        if (data.items) combinedItems = combinedItems.concat(data.items);
-                    }
-                    combinedItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+    try {
+        let combinedItems = [];
+        for (const url of urls) {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.items) combinedItems = combinedItems.concat(data.items);
+        }
+        combinedItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-                    const container = document.getElementById(boxId);
-                    container.innerHTML = combinedItems.slice(0, 7).map(item => `
-                        <div class="news-card">
-                            <h3 class="font-black text-lg leading-tight mb-2">
-                                <a href="${item.link}" target="_blank" class="hover:underline">${item.title}</a>
-                            </h3>
-                            <p class="text-xs leading-relaxed text-gray-800">
-                                ${item.description.replace(/<[^>]*>/g, '').substring(0, 100)}...
-                            </p>
-                        </div>
-                    `).join('');
-                } catch (e) {
-                    document.getElementById(boxId).innerHTML = "<p class='text-xs italic'>Cables cut. News delayed.</p>";
-                }
-            }
+        const container = document.getElementById(boxId);
+        let itemsHtml = "";
+
+        // Process top 7 items
+        for (const item of combinedItems.slice(0, 7)) {
+            const isDutch = urls.some(u => u.includes('.nl'));
+            
+            // Translate if it's a Dutch source
+            const cleanDesc = item.description.replace(/<[^>]*>/g, '').substring(0, 100);
+            const displayTitle = isDutch ? await translateText(item.title) : item.title;
+            const displayDesc = isDutch ? await translateText(cleanDesc) : cleanDesc;
+
+            itemsHtml += `
+                <div class="news-card">
+                    <h3 class="font-black text-lg leading-tight mb-2">
+                        <a href="${item.link}" target="_blank" class="hover:underline">${displayTitle}</a>
+                    </h3>
+                    <p class="text-xs leading-relaxed text-gray-800">${displayDesc}...</p>
+                </div>`;
+        }
+        container.innerHTML = itemsHtml;
+    } catch (e) {
+        document.getElementById(boxId).innerHTML = "<p class='text-xs italic'>Cables cut. News delayed.</p>";
+    }
+}
 
             btn.textContent = originalText;
             btn.disabled = false;
