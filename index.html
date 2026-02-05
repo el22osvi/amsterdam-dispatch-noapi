@@ -101,7 +101,7 @@
                 const amsterdamAlert = nsData.items.find(i => i.title.toLowerCase().includes('amsterdam')) || nsData.items[0];
                 document.getElementById('ns-text').innerHTML = amsterdamAlert ? `RAIL NOTICE: ${amsterdamAlert.title}` : "RAIL NOTICE: ALL TRACKS CLEAR";
             } catch (e) {
-                document.getElementById('ns-text').innerHTML = "RAIL NOTICE: TELEGRAPH LINES DOWN";
+                document.getElementById('ns-text').innerHTML = "RAIL NOTICE: NO UPDATES";
             }
 
             // 3. News Fetch
