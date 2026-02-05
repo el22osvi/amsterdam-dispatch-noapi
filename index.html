@@ -13,7 +13,6 @@
         .section-title { border-bottom: 2px solid black; font-weight: 900; text-transform: uppercase; margin-bottom: 1rem; }
         .news-card { border-bottom: 1px solid #ccc; padding-bottom: 1rem; margin-bottom: 1rem; }
         
-        /* THE VINTAGE BUTTON STYLE */
         .reprint-btn {
             border: 2px solid black;
             padding: 4px 12px;
@@ -25,17 +24,8 @@
             box-shadow: 2px 2px 0px black;
             background-color: transparent;
         }
-        .reprint-btn:hover {
-            background-color: black;
-            color: #f0ede5;
-            box-shadow: 0px 0px 0px black;
-            transform: translate(1px, 1px);
-        }
-        .reprint-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* Vintage Paper Texture */
+        .reprint-btn:hover { background-color: black; color: #f0ede5; box-shadow: 0px 0px 0px black; transform: translate(1px, 1px); }
+        
         body::before {
             content: "";
             position: fixed;
@@ -51,7 +41,7 @@
 
     <header class="max-w-6xl mx-auto text-center mb-8">
         <div class="flex justify-between items-end mb-2 text-[10px] font-bold uppercase tracking-widest px-1">
-            <div id="weather-text">Syncing Climate...</div>
+            <div id="weather-text">⚓ Amsterdam Climate...</div>
             <div id="displayDate"></div>
         </div>
         
@@ -60,16 +50,12 @@
         </div>
 
         <div class="border-b border-black py-1 px-1 flex justify-center bg-white/30">
-            <div id="ns-text" class="text-[9px] uppercase font-bold tracking-tighter">
-                Checking Rail Intelligence...
-            </div>
+            <div id="ns-text" class="text-[9px] uppercase font-bold tracking-tighter">Checking Rail Intelligence...</div>
         </div>
         
         <div class="flex justify-between items-center mt-3 px-1 italic text-[10px] text-gray-600">
             <span>Price: One Penny</span>
-            <button onclick="fetchNews()" id="btn" class="reprint-btn italic-none not-italic">
-                Reprint Edition
-            </button>
+            <button onclick="fetchNews()" id="btn" class="reprint-btn not-italic">Reprint Edition</button>
             <span>Est. 2026</span>
         </div>
     </header>
@@ -79,12 +65,10 @@
             <h2 class="section-title text-sm">Amsterdam Local</h2>
             <div id="at5-box"></div>
         </section>
-
         <section>
             <h2 class="section-title text-sm">The Netherlands</h2>
             <div id="netherlands-box"></div>
         </section>
-
         <section>
             <h2 class="section-title text-sm text-red-900">World Telegram</h2>
             <div id="international-box"></div>
@@ -93,88 +77,84 @@
 
     <script>
         async function fetchNews() {
-    const btn = document.getElementById('btn');
-    const originalText = "Reprint Edition";
-    btn.textContent = "PRINTING...";
-    btn.disabled = true;
+            const btn = document.getElementById('btn');
+            const originalText = "Reprint Edition";
+            btn.textContent = "PRINTING...";
+            btn.disabled = true;
 
-    // 1. WEATHER & TRAINS (Top Metadata)
-    try {
-        // Switch to KNMI - More stable for proxies
-        const wUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://www.knmi.nl/nederland-nu/weer/verwachtingen.rss';
-        const wRes = await fetch(wUrl);
-        const wData = await wRes.json();
-        const wItem = wData.items[0];
-        // KNMI descriptions are long, we just take the first few words
-        const weatherShort = wItem.title.split('verwachting')[0] || "Amsterdam";
-        document.getElementById('weather-text').innerHTML = `⚓ ${weatherShort}`;
-    } catch (e) {
-        document.getElementById('weather-text').innerHTML = "⚓ AMSTERDAM: CLIMATE STEADY";
-    }
-
-    try {
-        const nsUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://www.rijdentretreinen.nl/rss/storingen';
-        const nsRes = await fetch(nsUrl);
-        const nsData = await nsRes.json();
-        const amsterdamAlert = nsData.items.find(i => i.title.toLowerCase().includes('amsterdam')) || nsData.items[0];
-        
-        document.getElementById('ns-text').innerHTML = amsterdamAlert 
-            ? `RAIL NOTICE: ${amsterdamAlert.title}` 
-            : "RAIL NOTICE: ALL TRACKS CLEAR AT AMSTERDAM CENTRAAL";
-    } catch (e) {
-        document.getElementById('ns-text').innerHTML = "RAIL NOTICE: TELEGRAPH LINES DOWN";
-    }
-
-    // 2. NEWS SECTIONS
-    const categories = {
-        'at5-box': ['https://api.rss2json.com/v1/api.json?rss_url=https://at5.api.abc.nh-at5.nl/rss/at5'],
-        'netherlands-box': [
-            'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.nos.nl/nosnieuwsbinnenland',
-            'https://api.rss2json.com/v1/api.json?rss_url=https://www.volkskrant.nl/voorpagina/rss.xml',
-            'https://api.rss2json.com/v1/api.json?rss_url=https://www.parool.nl/amsterdam/rss.xml'
-        ],
-        'international-box': [
-            'https://api.rss2json.com/v1/api.json?rss_url=http://feeds.bbci.co.uk/news/world/rss.xml',
-            'https://api.rss2json.com/v1/api.json?rss_url=https://www.theguardian.com/world/rss',
-            'https://api.rss2json.com/v1/api.json?rss_url=http://rss.cnn.com/rss/edition_world.rss'
-        ]
-    };
-
-    for (const [boxId, urls] of Object.entries(categories)) {
-        try {
-            let combinedItems = [];
-            for (const url of urls) {
-                const res = await fetch(url);
-                const data = await res.json();
-                if (data.items) combinedItems = combinedItems.concat(data.items);
+            // 1. Weather Fetch
+            try {
+                const wUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://www.knmi.nl/nederland-nu/weer/verwachtingen.rss';
+                const wRes = await fetch(wUrl);
+                const wData = await wRes.json();
+                const weatherShort = wData.items[0].title.split('verwachting')[0] || "Amsterdam";
+                document.getElementById('weather-text').innerHTML = `⚓ ${weatherShort.toUpperCase()}`;
+            } catch (e) {
+                document.getElementById('weather-text').innerHTML = "⚓ AMSTERDAM: CLIMATE STEADY";
             }
-            combinedItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-            const container = document.getElementById(boxId);
-            container.innerHTML = combinedItems.slice(0, 7).map(item => `
-                <div class="news-card">
-                    <h3 class="font-black text-lg leading-tight mb-2">
-                        <a href="${item.link}" target="_blank" class="hover:underline">${item.title}</a>
-                    </h3>
-                    <p class="text-xs leading-relaxed text-gray-800">
-                        ${item.description.replace(/<[^>]*>/g, '').substring(0, 100)}...
-                    </p>
-                </div>
-            `).join('');
-        } catch (e) {
-            document.getElementById(boxId).innerHTML = "<p class='text-xs italic'>Cables cut. News delayed.</p>";
+            // 2. Rail Fetch
+            try {
+                const nsUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://www.rijdentretreinen.nl/rss/storingen';
+                const nsRes = await fetch(nsUrl);
+                const nsData = await nsRes.json();
+                const amsterdamAlert = nsData.items.find(i => i.title.toLowerCase().includes('amsterdam')) || nsData.items[0];
+                document.getElementById('ns-text').innerHTML = amsterdamAlert ? `RAIL NOTICE: ${amsterdamAlert.title}` : "RAIL NOTICE: ALL TRACKS CLEAR";
+            } catch (e) {
+                document.getElementById('ns-text').innerHTML = "RAIL NOTICE: TELEGRAPH LINES DOWN";
+            }
+
+            // 3. News Fetch
+            const categories = {
+                'at5-box': ['https://api.rss2json.com/v1/api.json?rss_url=https://at5.api.abc.nh-at5.nl/rss/at5'],
+                'netherlands-box': [
+                    'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.nos.nl/nosnieuwsbinnenland',
+                    'https://api.rss2json.com/v1/api.json?rss_url=https://www.volkskrant.nl/voorpagina/rss.xml',
+                    'https://api.rss2json.com/v1/api.json?rss_url=https://www.parool.nl/amsterdam/rss.xml'
+                ],
+                'international-box': [
+                    'https://api.rss2json.com/v1/api.json?rss_url=http://feeds.bbci.co.uk/news/world/rss.xml',
+                    'https://api.rss2json.com/v1/api.json?rss_url=https://www.theguardian.com/world/rss',
+                    'https://api.rss2json.com/v1/api.json?rss_url=http://rss.cnn.com/rss/edition_world.rss'
+                ]
+            };
+
+            for (const [boxId, urls] of Object.entries(categories)) {
+                try {
+                    let combinedItems = [];
+                    for (const url of urls) {
+                        const res = await fetch(url);
+                        const data = await res.json();
+                        if (data.items) combinedItems = combinedItems.concat(data.items);
+                    }
+                    combinedItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+                    const container = document.getElementById(boxId);
+                    container.innerHTML = combinedItems.slice(0, 7).map(item => `
+                        <div class="news-card">
+                            <h3 class="font-black text-lg leading-tight mb-2">
+                                <a href="${item.link}" target="_blank" class="hover:underline">${item.title}</a>
+                            </h3>
+                            <p class="text-xs leading-relaxed text-gray-800">
+                                ${item.description.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                            </p>
+                        </div>
+                    `).join('');
+                } catch (e) {
+                    document.getElementById(boxId).innerHTML = "<p class='text-xs italic'>Cables cut. News delayed.</p>";
+                }
+            }
+
+            btn.textContent = originalText;
+            btn.disabled = false;
         }
-    }
 
-    btn.textContent = originalText;
-    btn.disabled = false;
-}
-        }
-
+        // Initialize Date
         document.getElementById('displayDate').textContent = new Date().toLocaleDateString('en-GB', { 
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
         }).toUpperCase();
 
+        // Run on load
         window.onload = fetchNews;
     </script>
 </body>
